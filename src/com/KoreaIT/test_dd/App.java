@@ -1,5 +1,9 @@
 package com.KoreaIT.test_dd;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -15,7 +19,7 @@ public class App {
 	
 	public void start() {
 		int lastArticleId = 0;
-		int lastMemberId = 0;
+//		int lastMemberId = 0;
 		
 		Scanner sc = new Scanner(System.in);
 		
@@ -34,10 +38,10 @@ public class App {
 			}
 			
 			if(cmd.equals("article write")) {
-				if(islogined()==false) {
-					System.out.println("로그인 후 이용해주세요.");
-					continue;
-				}
+//				if(islogined()==false) {
+//					System.out.println("로그인 후 이용해주세요.");
+//					continue;
+//				}
 				int id = lastArticleId + 1;
 				System.out.printf("제목 : ");
 				String title = sc.nextLine();
@@ -45,14 +49,65 @@ public class App {
 				String body = sc.nextLine();
 				String regDate = Util.getNowDateStr();
 				String updateDate = Util.getNowDateStr();
-				int memberId = loginedMember.id;
+				int memberId = 1;
 				
 				Article article = new Article(id, regDate, updateDate, title, body, memberId);
 				articles.add(article);
 				
+				Connection conn = null;
+				PreparedStatement pstmt = null;
+				// Sql 구문을 실행시키는 기능을 갖는 객체를 pstmt라는 이름으로 생성
+				
+				// 1. 드라이버 연결
+				try {
+					Class.forName("com.mysql.jdbc.Driver");
+					String url = "jdbc:mysql://127.0.0.1:3306/JAM?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Seoul&useOldAliasMetadataBehavior=true&zeroDateTimeNehavior=convertToNull";
+
+					conn = DriverManager.getConnection(url, "root", "1234");
+					// url은 DB에 연결할 때 찾는 주소를 적는 곳
+
+					String sql = "INSERT INTO article";
+					sql += " SET regDate = NOW(),";
+					sql += "updateDate = NOW(),";
+					sql += "title = '"+ title + "',";
+					sql += "`body` = '" + body + "',";
+					sql += "memberId = 1;";
+					// sql 쿼리문 작성
+
+					System.out.println(sql);
+
+					pstmt = conn.prepareStatement(sql);
+					// conn.prepareStatement(sql)은 sql문을 전송한다는 뜻
+
+					pstmt.executeUpdate();
+					// executeUpdate()는 조회문(select, show 등)을 제외한 create, drop, insert, delete, update 등등 문을 처리할 때 사용한다
+					// 안쓰면 DB에 적용이 안됨.
+
+				} catch (ClassNotFoundException e) {
+					System.out.println("드라이버 로딩 실패");
+				} catch (SQLException e) {
+					System.out.println("에러 : " + e);
+				} finally {
+					try {
+						if (conn != null && !conn.isClosed()) {
+							conn.close();
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					try {
+						if (pstmt != null && !pstmt.isClosed()) {
+							pstmt.close();
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+				
 				System.out.printf("%d번 게시글이 생성되었습니다.\n", id);
 				lastArticleId++;
 			}
+			
 			else if(cmd.equals("article list")) {
 				if(articles.size()==0) {
 					System.out.println("게시글이 존재하지 않습니다.");
@@ -65,6 +120,7 @@ public class App {
 					System.out.printf("%d  |  %s    | %d  | %d\n", article.id, article.title, article.hit, article.memberId);
 				}
 			}
+			
 			else if(cmd.startsWith("article detail")) {
 				String[] cmdBits = cmd.split(" ");
 				
@@ -91,10 +147,10 @@ public class App {
 				System.out.printf("작성자 : %d \n", foundArticle.memberId);
 			}
 			else if(cmd.startsWith("article delete")) {
-				if(islogined()==false) {
-					System.out.println("로그인 후 이용해주세요.");
-					continue;
-				}
+//				if(islogined()==false) {
+//					System.out.println("로그인 후 이용해주세요.");
+//					continue;
+//				}
 				
 				String[] cmdBits = cmd.split(" ");
 				
@@ -115,11 +171,11 @@ public class App {
 				articles.remove(foundArticle);
 			}
 			else if(cmd.equals("article modify")) {
-				if(islogined()==false) {
-					System.out.println("로그인 후 이용해주세요.");
-					continue;
-				}
-				
+//				if(islogined()==false) {
+//					System.out.println("로그인 후 이용해주세요.");
+//					continue;
+//				}
+//				
 				String[] cmdBits = cmd.split(" ");
 				
 				if(cmdBits.length < 3) {
@@ -147,108 +203,108 @@ public class App {
 				
 				System.out.printf("%d번 게시글이 수정되었습니다.\n", foundArticle.id);
 			}
-			else if(cmd.equals("member join")) {
-				if(islogined()) {
-					System.out.println("로그아웃 후 이용해주세요.");
-					continue;
-				}
-				int id = lastMemberId + 1;
-				String loginId = null;
-				String loginPw = null;
-				String loginPwConfirm = null;
-				String name = null;
-				
-				while(true) {
-					System.out.printf("로그인 아이디 : ");
-					loginId = sc.nextLine();
-					
-					if(loginId.length()==0) {
-						System.out.println("필수 정보입니다.");
-						continue;
-					}
-					
-					if(isJoinableLoginId(loginId)==false) {
-						System.out.println("이미 사용중인 아이디입니다.");
-						continue;
-					}
-					System.out.println("사용 가능한 아이디입니다.");
-					break;
-				}
-				
-				while(true) {
-					System.out.printf("로그인 비밀번호 : ");
-					loginPw = sc.nextLine();
-					
-					if(loginPw.length()==0) {
-						System.out.println("필수 정보입니다.");
-						continue;
-					}
-					while(true) {
-						System.out.printf("로그인 비밀번호 확인: ");
-						loginPwConfirm = sc.nextLine();
-						
-						if(loginPwConfirm.length()==0) {
-							System.out.println("필수 정보입니다.");
-							continue;
-						}
-						break;
-					}
-					if(loginPw.equals(loginPwConfirm)==false) {
-						System.out.println("비밀번호가 일치하지 않습니다.");
-						continue;
-					}
-					System.out.println("비밀번호가 일치합니다.");
-					break;
-				}
-				while(true) {
-					System.out.printf("이름 : ");
-					name = sc.nextLine();
-					
-					if(name.length()==0) {
-						System.out.println("필수 정보입니다.");
-						continue;
-					}
-					break;
-				}
-				String regDate = Util.getNowDateStr();
-				String updateDate = Util.getNowDateStr();
-				
-				Member member = new Member(id, regDate, updateDate, loginId, loginPw, name);
-				members.add(member);
-				System.out.println(name+"님 회원가입 되었습니다.");
-			}
-			else if(cmd.equals("member login")) {
-				if(islogined()) {
-					System.out.println("로그아웃 후 이용해주세요.");
-					continue;
-				}
-				System.out.printf("아이디 : ");
-				String loginId = sc.nextLine();
-				System.out.printf("비밀번호 : ");
-				String loginPw = sc.nextLine();
-				
-				Member member = getMemberByLoginId(loginId);
-				
-				if(member==null) {
-					System.out.println("아이디 또는 비밀번호를 확인해주세요.");
-					continue;
-				}
-				
-				if(member.loginPw.equals(loginPw)==false) {
-					System.out.println("아이디 또는 비밀번호를 확인해주세요.");
-					continue;
-				}
-				System.out.printf("로그인 성공!, %s님 반갑습니다.\n", member.name);
-				loginedMember = member;
-			}
-			else if(cmd.equals("member logout")) {
-				if(islogined()==false) {
-					System.out.println("로그인 후 이용해주세요.");
-					continue;
-				}
-				System.out.println(loginedMember.name + "님 로그아웃 되었습니다.");
-				loginedMember = null;
-			}
+//			else if(cmd.equals("member join")) {
+//				if(islogined()) {
+//					System.out.println("로그아웃 후 이용해주세요.");
+//					continue;
+//				}
+//				int id = lastMemberId + 1;
+//				String loginId = null;
+//				String loginPw = null;
+//				String loginPwConfirm = null;
+//				String name = null;
+//				
+//				while(true) {
+//					System.out.printf("로그인 아이디 : ");
+//					loginId = sc.nextLine();
+//					
+//					if(loginId.length()==0) {
+//						System.out.println("필수 정보입니다.");
+//						continue;
+//					}
+//					
+//					if(isJoinableLoginId(loginId)==false) {
+//						System.out.println("이미 사용중인 아이디입니다.");
+//						continue;
+//					}
+//					System.out.println("사용 가능한 아이디입니다.");
+//					break;
+//				}
+//				
+//				while(true) {
+//					System.out.printf("로그인 비밀번호 : ");
+//					loginPw = sc.nextLine();
+//					
+//					if(loginPw.length()==0) {
+//						System.out.println("필수 정보입니다.");
+//						continue;
+//					}
+//					while(true) {
+//						System.out.printf("로그인 비밀번호 확인: ");
+//						loginPwConfirm = sc.nextLine();
+//						
+//						if(loginPwConfirm.length()==0) {
+//							System.out.println("필수 정보입니다.");
+//							continue;
+//						}
+//						break;
+//					}
+//					if(loginPw.equals(loginPwConfirm)==false) {
+//						System.out.println("비밀번호가 일치하지 않습니다.");
+//						continue;
+//					}
+//					System.out.println("비밀번호가 일치합니다.");
+//					break;
+//				}
+//				while(true) {
+//					System.out.printf("이름 : ");
+//					name = sc.nextLine();
+//					
+//					if(name.length()==0) {
+//						System.out.println("필수 정보입니다.");
+//						continue;
+//					}
+//					break;
+//				}
+//				String regDate = Util.getNowDateStr();
+//				String updateDate = Util.getNowDateStr();
+//				
+//				Member member = new Member(id, regDate, updateDate, loginId, loginPw, name);
+//				members.add(member);
+//				System.out.println(name+"님 회원가입 되었습니다.");
+//			}
+//			else if(cmd.equals("member login")) {
+//				if(islogined()) {
+//					System.out.println("로그아웃 후 이용해주세요.");
+//					continue;
+//				}
+//				System.out.printf("아이디 : ");
+//				String loginId = sc.nextLine();
+//				System.out.printf("비밀번호 : ");
+//				String loginPw = sc.nextLine();
+//				
+//				Member member = getMemberByLoginId(loginId);
+//				
+//				if(member==null) {
+//					System.out.println("아이디 또는 비밀번호를 확인해주세요.");
+//					continue;
+//				}
+//				
+//				if(member.loginPw.equals(loginPw)==false) {
+//					System.out.println("아이디 또는 비밀번호를 확인해주세요.");
+//					continue;
+//				}
+//				System.out.printf("로그인 성공!, %s님 반갑습니다.\n", member.name);
+//				loginedMember = member;
+//			}
+//			else if(cmd.equals("member logout")) {
+//				if(islogined()==false) {
+//					System.out.println("로그인 후 이용해주세요.");
+//					continue;
+//				}
+//				System.out.println(loginedMember.name + "님 로그아웃 되었습니다.");
+//				loginedMember = null;
+//			}
 			else {
 				System.out.println("존재하지 않는 명령어입니다.");
 			}
@@ -257,30 +313,30 @@ public class App {
 		sc.close();
 	}
 
-	private boolean islogined() {
-		if(loginedMember!=null) {
-			return true;
-		}
-		return false;
-	}
-
-	private boolean isJoinableLoginId(String loginId) {
-		for(Member member : members) {
-			if(member.loginId.equals(loginId)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private Member getMemberByLoginId(String loginId) {
-		for(Member member : members) {
-			if(member.loginId.equals(loginId)) {
-				return member;
-			}
-		}
-		return null;
-	}
+//	private boolean islogined() {
+//		if(loginedMember!=null) {
+//			return true;
+//		}
+//		return false;
+//	}
+//
+//	private boolean isJoinableLoginId(String loginId) {
+//		for(Member member : members) {
+//			if(member.loginId.equals(loginId)) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
+//
+//	private Member getMemberByLoginId(String loginId) {
+//		for(Member member : members) {
+//			if(member.loginId.equals(loginId)) {
+//				return member;
+//			}
+//		}
+//		return null;
+//	}
 
 	private Article getArticleById(int id) {
 		int i = 0;

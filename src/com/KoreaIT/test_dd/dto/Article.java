@@ -18,4 +18,9 @@ public class Article extends Dto{
 	public void IncreaseHit() {
 		this.hit++;
 	}
+
+	@Override
+	public String toString() {
+		return "Article [title=" + title + ", body=" + body + ", hit=" + hit + ", memberId=" + memberId + "]";
+	}
 }
