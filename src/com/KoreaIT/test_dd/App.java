@@ -3,6 +3,7 @@ package com.KoreaIT.test_dd;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,6 @@ import com.KoreaIT.test_dd.dto.Member;
 import com.KoreaIT.test_dd.util.Util;
 
 public class App {
-	static List<Article> articles = new ArrayList<>();
 	static List<Member> members = new ArrayList<>();
 	static Member loginedMember = null;
 	
@@ -52,7 +52,6 @@ public class App {
 				int memberId = 1;
 				
 				Article article = new Article(id, regDate, updateDate, title, body, memberId);
-				articles.add(article);
 				
 				Connection conn = null;
 				PreparedStatement pstmt = null;
@@ -104,11 +103,71 @@ public class App {
 					}
 				}
 				
-				System.out.printf("%d번 게시글이 생성되었습니다.\n", id);
+				System.out.printf("%d번 게시글이 생성되었습니다.\n", article.id);
 				lastArticleId++;
 			}
 			
 			else if(cmd.equals("article list")) {
+				Connection conn = null;
+				PreparedStatement pstmt = null;
+				ResultSet rs = null;
+				// Sql 구문을 실행시키는 기능을 갖는 객체를 pstmt라는 이름으로 생성
+				
+				List<Article> articles = new ArrayList<>();
+				// 1. 드라이버 연결
+				try {
+					Class.forName("com.mysql.jdbc.Driver");
+					String url = "jdbc:mysql://127.0.0.1:3306/JAM?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Seoul&useOldAliasMetadataBehavior=true&zeroDateTimeNehavior=convertToNull";
+
+					conn = DriverManager.getConnection(url, "root", "1234");
+					// url은 DB에 연결할 때 찾는 주소를 적는 곳
+					System.out.println("연결 성공!");
+
+					String sql = "SELECT * FROM article;";
+					// sql 쿼리문 작성
+
+					System.out.println(sql);
+
+					pstmt = conn.prepareStatement(sql);
+					// conn.prepareStatement(sql)은 sql문을 전송한다는 뜻
+
+					pstmt = conn.prepareStatement(sql);
+
+					rs = pstmt.executeQuery(sql);
+					// executeQuery()는 조회문(select, show 등)을 실행할 목적으로 사용한다.
+
+					while (rs.next()) {
+						int id = rs.getInt("id");
+						String regDate = rs.getString("regDate");
+						String updateDate = rs.getString("updateDate");
+						String title = rs.getString("title");
+						String body = rs.getString("body");
+						int memberId = rs.getInt("memberId");
+
+						Article article = new Article(id, regDate, updateDate, title, body, memberId);
+						articles.add(article);
+					}
+					
+				} catch (ClassNotFoundException e) {
+					System.out.println("드라이버 로딩 실패");
+				} catch (SQLException e) {
+					System.out.println("에러 : " + e);
+				} finally {
+					try {
+						if (conn != null && !conn.isClosed()) {
+							conn.close();
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					try {
+						if (pstmt != null && !pstmt.isClosed()) {
+							pstmt.close();
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
 				if(articles.size()==0) {
 					System.out.println("게시글이 존재하지 않습니다.");
 					continue;
@@ -121,88 +180,88 @@ public class App {
 				}
 			}
 			
-			else if(cmd.startsWith("article detail")) {
-				String[] cmdBits = cmd.split(" ");
-				
-				if(cmdBits.length < 3) {
-					System.out.println("articel detail (숫자)로 입력해주세요.");
-					continue;
-				}
-					
-				int id = Integer.parseInt(cmdBits[2]);
-				
-				Article foundArticle = getArticleById(id);
-				
-				if(foundArticle==null) {
-					System.out.printf("%d번 게시글은 존재하지 않습니다\n", id);
-					continue;
-				}
-				foundArticle.IncreaseHit();
-				System.out.printf("번호 : %d \n", foundArticle.id);
-				System.out.printf("제목 : %s \n", foundArticle.title);
-				System.out.printf("내용 : %s \n", foundArticle.body);
-				System.out.printf("작성날짜 : %s \n", foundArticle.regDate);
-				System.out.printf("수정날짜 : %s \n", foundArticle.updateDate);
-				System.out.printf("조회수 : %s \n", foundArticle.hit);
-				System.out.printf("작성자 : %d \n", foundArticle.memberId);
-			}
-			else if(cmd.startsWith("article delete")) {
-//				if(islogined()==false) {
-//					System.out.println("로그인 후 이용해주세요.");
+//			else if(cmd.startsWith("article detail")) {
+//				String[] cmdBits = cmd.split(" ");
+//				
+//				if(cmdBits.length < 3) {
+//					System.out.println("articel detail (숫자)로 입력해주세요.");
 //					continue;
 //				}
-				
-				String[] cmdBits = cmd.split(" ");
-				
-				if(cmdBits.length < 3) {
-					System.out.println("articel delete (숫자)로 입력해주세요.");
-					continue;
-				}
-				
-				int id = Integer.parseInt(cmdBits[2]);
-				
-				Article foundArticle = getArticleById(id);
-				
-				if(foundArticle==null) {
-					System.out.printf("%d번 게시글은 존재하지 않습니다\n", id);
-					continue;
-				}
-				System.out.printf("%d번 게시글이 삭제되었습니다.\n", foundArticle.id);
-				articles.remove(foundArticle);
-			}
-			else if(cmd.equals("article modify")) {
+//					
+//				int id = Integer.parseInt(cmdBits[2]);
+//				
+//				Article foundArticle = getArticleById(id);
+//				
+//				if(foundArticle==null) {
+//					System.out.printf("%d번 게시글은 존재하지 않습니다\n", id);
+//					continue;
+//				}
+//				foundArticle.IncreaseHit();
+//				System.out.printf("번호 : %d \n", foundArticle.id);
+//				System.out.printf("제목 : %s \n", foundArticle.title);
+//				System.out.printf("내용 : %s \n", foundArticle.body);
+//				System.out.printf("작성날짜 : %s \n", foundArticle.regDate);
+//				System.out.printf("수정날짜 : %s \n", foundArticle.updateDate);
+//				System.out.printf("조회수 : %s \n", foundArticle.hit);
+//				System.out.printf("작성자 : %d \n", foundArticle.memberId);
+//			}
+//			else if(cmd.startsWith("article delete")) {
 //				if(islogined()==false) {
 //					System.out.println("로그인 후 이용해주세요.");
 //					continue;
 //				}
 //				
-				String[] cmdBits = cmd.split(" ");
-				
-				if(cmdBits.length < 3) {
-					System.out.println("articel modify (숫자)로 입력해주세요.");
-					continue;
-				}
-				
-				int id = Integer.parseInt(cmdBits[2]);
-				
-				Article foundArticle = getArticleById(id);
-				
-				if(foundArticle==null) {
-					System.out.printf("%d번 게시글은 존재하지 않습니다\n", id);
-					continue;
-				}
-				System.out.printf("새 제목 : ");
-				String title = sc.nextLine();
-				System.out.printf("새 내용 : ");
-				String body = sc.nextLine();
-				String updateDate = Util.getNowDateStr();
-				
-				foundArticle.title = title;
-				foundArticle.body = body;
-				foundArticle.updateDate = updateDate;
-				
-				System.out.printf("%d번 게시글이 수정되었습니다.\n", foundArticle.id);
-			}
+//				String[] cmdBits = cmd.split(" ");
+//				
+//				if(cmdBits.length < 3) {
+//					System.out.println("articel delete (숫자)로 입력해주세요.");
+//					continue;
+//				}
+//				
+//				int id = Integer.parseInt(cmdBits[2]);
+//				
+//				Article foundArticle = getArticleById(id);
+//				
+//				if(foundArticle==null) {
+//					System.out.printf("%d번 게시글은 존재하지 않습니다\n", id);
+//					continue;
+//				}
+//				System.out.printf("%d번 게시글이 삭제되었습니다.\n", foundArticle.id);
+//				articles.remove(foundArticle);
+//			}
+//			else if(cmd.equals("article modify")) {
+//				if(islogined()==false) {
+//					System.out.println("로그인 후 이용해주세요.");
+//					continue;
+//				}
+//				
+//				String[] cmdBits = cmd.split(" ");
+//				
+//				if(cmdBits.length < 3) {
+//					System.out.println("articel modify (숫자)로 입력해주세요.");
+//					continue;
+//				}
+//				
+//				int id = Integer.parseInt(cmdBits[2]);
+//				
+//				Article foundArticle = getArticleById(id);
+//				
+//				if(foundArticle==null) {
+//					System.out.printf("%d번 게시글은 존재하지 않습니다\n", id);
+//					continue;
+//				}
+//				System.out.printf("새 제목 : ");
+//				String title = sc.nextLine();
+//				System.out.printf("새 내용 : ");
+//				String body = sc.nextLine();
+//				String updateDate = Util.getNowDateStr();
+//				
+//				foundArticle.title = title;
+//				foundArticle.body = body;
+//				foundArticle.updateDate = updateDate;
+//				
+//				System.out.printf("%d번 게시글이 수정되었습니다.\n", foundArticle.id);
+//			}
 //			else if(cmd.equals("member join")) {
 //				if(islogined()) {
 //					System.out.println("로그아웃 후 이용해주세요.");
@@ -337,16 +396,16 @@ public class App {
 //		}
 //		return null;
 //	}
-
-	private Article getArticleById(int id) {
-		int i = 0;
-		for(Article article : articles) {
-			if(article.id==id) {
-				return articles.get(i);
-			}
-			i++;
-		}
-		return null;
-	}
+//
+//	private Article getArticleById(int id) {
+//		int i = 0;
+//		for(Article article : articles) {
+//			if(article.id==id) {
+//				return articles.get(i);
+//			}
+//			i++;
+//		}
+//		return null;
+//	}
 
 }
