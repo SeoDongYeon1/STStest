@@ -32,10 +32,12 @@ public class JDBCInsertTest {
 
 			pstmt = conn.prepareStatement(sql);
 			// conn.prepareStatement(sql)은 sql문을 전송한다는 뜻
-
-			pstmt.executeUpdate();
+			
+			int affectedRow = pstmt.executeUpdate();
 			// executeUpdate()는 조회문(select, show 등)을 제외한 create, drop, insert, delete, update 등등 문을 처리할 때 사용한다
 			// 안쓰면 DB에 적용이 안됨.
+			
+			System.out.println(":::::::"+affectedRow);
 
 		} catch (ClassNotFoundException e) {
 			System.out.println("드라이버 로딩 실패");

@@ -40,7 +40,7 @@ public class JDBCSelectTest {
 			rs = pstmt.executeQuery(sql);
 			// executeQuery()는 조회문(select, show 등)을 실행할 목적으로 사용한다.
 
-			while (rs.next()) {
+			while (rs.next()) { // while (rs.next())는 다음 데이터가 없을때 까지 반복
 				int id = rs.getInt("id");
 				String regDate = rs.getString("regDate");
 				String updateDate = rs.getString("updateDate");
