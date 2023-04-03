@@ -3,10 +3,10 @@ package com.KoreaIT.test_dd;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import com.KoreaIT.test_dd.dto.Article;
@@ -91,50 +91,20 @@ public class App {
 		
 		else if(cmd.equals("article list")) {
 			System.out.println("==게시물 목록==");
-			PreparedStatement pstmt = null;
-			ResultSet rs = null;
 			
 			List<Article> articles = new ArrayList<>();
 			
-			try {
-				String sql = "SELECT * FROM article";
-				sql += " ORDER BY id DESC;";
-
-				System.out.println(sql);
-
-				pstmt = conn.prepareStatement(sql);
-
-				rs = pstmt.executeQuery(sql);
-
-				while (rs.next()) { // while (rs.next())는 다음 데이터가 없을때 까지 반복
-					int id = rs.getInt("id");
-					String regDate = rs.getString("regDate");
-					String updateDate = rs.getString("updateDate");
-					String title = rs.getString("title");
-					String body = rs.getString("body");
-
-					Article article = new Article(id, regDate, updateDate, title, body);
-					articles.add(article);
-				}
-				
-			} catch (SQLException e) {
-				System.out.println("에러 : " + e);
-			} finally {
-				try {
-					if (rs != null && !rs.isClosed()) {
-						rs.close();
-					}
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-				try {
-					if (pstmt != null && !pstmt.isClosed()) {
-						pstmt.close();
-					}
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
+			SecSql sql = new SecSql();
+			
+			sql.append("SELECT * FROM article");
+			sql.append(" ORDER BY id DESC;");
+			
+			List<Map<String, Object>> articlesListMap = DBUtil.selectRows(conn, sql);
+			
+			for(Map<String, Object> articleMap : articlesListMap) {
+				articles.add(new Article(articleMap));
 			}
+			
 			if(articles.size()==0) {
 				System.out.println("게시글이 존재하지 않습니다.");
 				return 0;
