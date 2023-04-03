@@ -11,6 +11,8 @@ import java.util.Scanner;
 
 import com.KoreaIT.test_dd.dto.Article;
 import com.KoreaIT.test_dd.dto.Member;
+import com.KoreaIT.test_dd.util.DBUtil;
+import com.KoreaIT.test_dd.util.SecSql;
 
 public class App {
 	static List<Member> members = new ArrayList<>();
@@ -59,8 +61,6 @@ public class App {
 	}
 
 	private int doAction(Connection conn, Scanner sc, String cmd) {
-		int lastArticleId = 0;
-		
 		if (cmd.length() == 0) {
 			System.out.println("명령어를 입력해주세요.");
 			return 0;
@@ -72,43 +72,21 @@ public class App {
 		
 		if(cmd.equals("article write")) {
 			System.out.println("==게시물 작성==");
-			int id = lastArticleId + 1;
 			System.out.printf("제목 : ");
 			String title = sc.nextLine();
 			System.out.printf("내용 : ");
 			String body = sc.nextLine();
-			int memberId = 1;
 			
-			PreparedStatement pstmt = null;
+			SecSql sql = new SecSql();
 			
-			try {
-				String sql = "INSERT INTO article";
-				sql += " SET regDate = NOW(),";
-				sql += "updateDate = NOW(),";
-				sql += "title = '"+ title + "',";
-				sql += "`body` = '" + body + "',";
-				sql += "memberId = " + memberId +";";
-
-				System.out.println(sql);
-
-				pstmt = conn.prepareStatement(sql);
-
-				pstmt.executeUpdate();
-
-			} catch (SQLException e) {
-				System.out.println("에러 : " + e);
-			} finally {
-				try {
-					if (pstmt != null && !pstmt.isClosed()) {
-						pstmt.close();
-					}
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			
+			sql.append("INSERT INTO article");
+			sql.append(" SET regDate = NOW()");
+			sql.append(", updateDate = NOW()");
+			sql.append(", title = ?", title);
+			sql.append(", `body` = ?", body);
+		
+			int id = DBUtil.insert(conn, sql);
 			System.out.printf("%d번 게시글이 생성되었습니다.\n", id);
-			lastArticleId++;
 		}
 		
 		else if(cmd.equals("article list")) {
@@ -134,9 +112,8 @@ public class App {
 					String updateDate = rs.getString("updateDate");
 					String title = rs.getString("title");
 					String body = rs.getString("body");
-					int memberId = rs.getInt("memberId");
 
-					Article article = new Article(id, regDate, updateDate, title, body, memberId);
+					Article article = new Article(id, regDate, updateDate, title, body);
 					articles.add(article);
 				}
 				
@@ -163,9 +140,9 @@ public class App {
 				return 0;
 			}
 			
-			System.out.println("번호  |  제목  | 조회수 | 작성자");
+			System.out.println("번호  |  제목  | 조회수 ");
 			for(Article article : articles) {
-				System.out.printf("%3d  | %s   | %2d  | %d\n", article.id, article.title, article.hit, article.memberId);
+				System.out.printf("%3d  | %s   | %2d \n", article.id, article.title, article.hit);
 			}
 		}
 		

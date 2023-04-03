@@ -46,9 +46,8 @@ public class JDBCSelectTest {
 				String updateDate = rs.getString("updateDate");
 				String title = rs.getString("title");
 				String body = rs.getString("body");
-				int memberId = rs.getInt("memberId");
 
-				Article article = new Article(id, regDate, updateDate, title, body, memberId);
+				Article article = new Article(id, regDate, updateDate, title, body);
 				articles.add(article);
 			}
 			

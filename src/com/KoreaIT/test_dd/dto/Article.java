@@ -4,15 +4,13 @@ public class Article extends Dto{
 	public String title;
 	public String body;
 	public int hit;
-	public int memberId;
 	
-	public Article(int id, String regDate, String updateDate, String title, String body, int memberId) {
+	public Article(int id, String regDate, String updateDate, String title, String body) {
 		this.id = id;
 		this.regDate = regDate;
 		this.updateDate = updateDate;
 		this.title = title;
 		this.body = body;
-		this.memberId = memberId;
 	}
 
 	public void IncreaseHit() {
@@ -21,6 +19,6 @@ public class Article extends Dto{
 
 	@Override
 	public String toString() {
-		return "Article [title=" + title + ", body=" + body + ", hit=" + hit + ", memberId=" + memberId + "]";
+		return "Article [title=" + title + ", body=" + body + ", hit=" + hit + "]";
 	}
 }
