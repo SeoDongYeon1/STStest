@@ -125,13 +125,27 @@ public class App {
 			}
 
 			int id = Integer.parseInt(cmdBits[2]);
+			
+			
+			SecSql sql = new SecSql();
+			
+			sql.append("SELECT *");
+			sql.append(" FROM article");
+			sql.append(" WHERE id = ?", id);
+			
+			int articleExist = DBUtil.selectRowIntValue(conn, sql);
+			
+			if(articleExist==-1) {
+				System.out.println(id + "번 게시글은 존재하지 않습니다.");
+				return 0;
+			}
 
 			System.out.printf("새 제목 : ");
 			String title = sc.nextLine();
 			System.out.printf("새 내용 : ");
 			String body = sc.nextLine();
 
-			SecSql sql = new SecSql();
+			sql = new SecSql();
 			
 			sql.append("UPDATE article");
 			sql.append("SET updateDate = NOW(),");
