@@ -2,7 +2,6 @@ package com.KoreaIT.test_dd;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,103 +64,85 @@ public class App {
 			System.out.println("명령어를 입력해주세요.");
 			return 0;
 		}
-		
+
 		if (cmd.equals("exit")) {
 			return -1;
 		}
-		
-		if(cmd.equals("article write")) {
+
+		if (cmd.equals("article write")) {
 			System.out.println("==게시물 작성==");
 			System.out.printf("제목 : ");
 			String title = sc.nextLine();
 			System.out.printf("내용 : ");
 			String body = sc.nextLine();
-			
+
 			SecSql sql = new SecSql();
-			
+
 			sql.append("INSERT INTO article");
 			sql.append(" SET regDate = NOW()");
 			sql.append(", updateDate = NOW()");
 			sql.append(", title = ?", title);
 			sql.append(", `body` = ?", body);
-		
+
 			int id = DBUtil.insert(conn, sql);
 			System.out.printf("%d번 게시글이 생성되었습니다.\n", id);
 		}
-		
-		else if(cmd.equals("article list")) {
+
+		else if (cmd.equals("article list")) {
 			System.out.println("==게시물 목록==");
-			
+
 			List<Article> articles = new ArrayList<>();
-			
+
 			SecSql sql = new SecSql();
-			
+
 			sql.append("SELECT * FROM article");
 			sql.append(" ORDER BY id DESC;");
-			
+
 			List<Map<String, Object>> articlesListMap = DBUtil.selectRows(conn, sql);
-			
-			for(Map<String, Object> articleMap : articlesListMap) {
+
+			for (Map<String, Object> articleMap : articlesListMap) {
 				articles.add(new Article(articleMap));
 			}
-			
-			if(articles.size()==0) {
+
+			if (articles.size() == 0) {
 				System.out.println("게시글이 존재하지 않습니다.");
 				return 0;
 			}
-			
+
 			System.out.println("번호  |  제목  | 조회수 ");
-			for(Article article : articles) {
+			for (Article article : articles) {
 				System.out.printf("%3d  | %s   | %2d \n", article.id, article.title, article.hit);
 			}
 		}
-		
 
-		else if(cmd.startsWith("article modify")) {
+		else if (cmd.startsWith("article modify")) {
 			System.out.println("==게시물 수정==");
 			String[] cmdBits = cmd.split(" ");
-			
-			if(cmdBits.length < 3) {
+
+			if (cmdBits.length < 3) {
 				System.out.println("articel modify (숫자)로 입력해주세요.");
 				return 0;
 			}
-			
+
 			int id = Integer.parseInt(cmdBits[2]);
-			
+
 			System.out.printf("새 제목 : ");
 			String title = sc.nextLine();
 			System.out.printf("새 내용 : ");
 			String body = sc.nextLine();
+
+			SecSql sql = new SecSql();
 			
-			PreparedStatement pstmt = null;
+			sql.append("UPDATE article");
+			sql.append("SET updateDate = NOW(),");
+			sql.append("title = ?", title);
+			sql.append(",`body` = ?", body);
+			sql.append("WHERE id = ?", id);
 			
-			try {
-				String sql = "UPDATE article ";
-				sql += "SET updateDate = NOW(), title = '" + title + "', `body` = '"+ body + "'";
-				sql += " WHERE id = "+id + ";";
-				// sql 쿼리문 작성
-
-				System.out.println(sql);
-
-				pstmt = conn.prepareStatement(sql);
-
-				pstmt.executeUpdate();
-
-			} catch (SQLException e) {
-				System.out.println("에러 : " + e);
-			} finally {
-				try {
-					if (pstmt != null && !pstmt.isClosed()) {
-						pstmt.close();
-					}
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			
+			DBUtil.update(conn, sql);
+			  
 			System.out.printf("%d번 게시물이 수정되었습니다.\n", id);
-		}
-		else {
+		} else {
 			System.out.println("존재하지 않는 명령어입니다.");
 		}
 		return 0;
